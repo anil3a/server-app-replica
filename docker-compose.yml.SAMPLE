@@ -1,0 +1,42 @@
+services:
+  server-app-replica:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server-app-replica
+    volumes:
+      - ./html:/var/www/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.site1.rule=Host(`site1.yourdomain.com`)"
+      - "traefik.http.routers.site1.entrypoints=web"
+      - "traefik.http.routers.site1.service=site1"
+      - "traefik.http.services.site1.loadbalancer.server.port=8081"
+
+      - "traefik.http.routers.site2.rule=Host(`site2.yourdomain.com`)"
+      - "traefik.http.routers.site2.entrypoints=web"
+      - "traefik.http.routers.site2.service=site2"
+      - "traefik.http.services.site2.loadbalancer.server.port=8082"
+    networks:
+      - traefik
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      - PMA_HOST=php-debian
+      - PMA_PORT=3306
+    depends_on:
+      - phpserver
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pma.rule=Host(`pma.yourdomain.com`)"
+      - "traefik.http.routers.pma.entrypoints=web"
+      - "traefik.http.routers.pma.service=pma"
+      - "traefik.http.services.pma.loadbalancer.server.port=80"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true

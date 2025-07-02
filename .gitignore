@@ -1,0 +1,10 @@
+html/site1/*
+!html/site1/.gitkeep
+html/site2/*
+!html/site2/.gitkeep
+
+docker-compose.yml
+Dockerfile
+vhost-site1.conf
+vhost-site2.conf
+sites-cron
