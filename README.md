@@ -35,11 +35,16 @@ This is just a replica of the old fashioned server app that was used to run the 
     docker-compose up --build -d
     ```
 
- 
+5. Run Python for log watching:
+    
+    - From outside the container, you can run the log watcher script to monitor Apache logs:
+        ```bash
+        docker exec -it server-app-replica python3 /usr/local/bin/apache_log_watcher.py
+        ```
 
+    - From inside the container, you can run the log watcher script to monitor Apache logs:
+        ```bash
+        docker exec -it server-app-replica bash
+        python3 /usr/local/bin/apache_log_watcher.py
+        ```
 
-
-## Useful commands
-
-For building app server
-`docker-compose up --build -d`
