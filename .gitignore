@@ -3,8 +3,9 @@ html/site1/*
 html/site2/*
 !html/site2/.gitkeep
 
+apache_log_watcher.py
 docker-compose.yml
 Dockerfile
+sites-cron
 vhost-site1.conf
 vhost-site2.conf
-sites-cron
