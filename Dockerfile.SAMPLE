@@ -10,8 +10,15 @@ RUN apt update && apt install -y \
     cron \
     curl \
     vim \
+    python3 \
+    python3-pip \
     net-tools \
+    git \
+    tmux \
     && apt clean
+
+# Install Python dependencies
+RUN apt install -y python3-requests && apt clean
 
 # Enable Apache modules
 RUN a2enmod rewrite
@@ -24,8 +31,12 @@ RUN a2dissite 000-default.conf && \
     a2ensite site1.conf site2.conf
 
 # Add crontab if needed
-COPY crontab /etc/cron.d/my-cron
-RUN chmod 0644 /etc/cron.d/my-cron && crontab /etc/cron.d/my-cron
+COPY sites-cron /etc/cron.d/sites-cron
+RUN chmod 0644 /etc/cron.d/sites-cron && crontab /etc/cron.d/sites-cron
+
+# Copy the Python script
+COPY apache_log_watcher.py /usr/local/bin/apache_log_watcher.py
+RUN chmod +x /usr/local/bin/apache_log_watcher.py
 
 # Add Listen ports
 RUN echo "Listen 8036" >> /etc/apache2/ports.conf && \
