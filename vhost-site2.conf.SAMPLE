@@ -1,4 +1,4 @@
-<VirtualHost *:8037>
+<VirtualHost *:8001>
     ServerName site2.local
     DocumentRoot /var/www/html/site2
 
