@@ -20,6 +20,13 @@ for site in $SITES; do
   # Generate vhost file
   envsubst < /templates/vhost-site.conf.template > "/etc/apache2/sites-available/$FOLDER.conf"
 
+  DOC_ROOT="/var/www/html/$FOLDER"
+  if [ ! -d "$DOC_ROOT" ]; then
+    echo "Creating missing document root: $DOC_ROOT"
+    mkdir -p "$DOC_ROOT"
+    echo "<?php echo 'Welcome to $DOMAIN'; ?>" > "$DOC_ROOT/index.php"
+  fi
+
   # Enable site
   a2ensite "$FOLDER.conf"
 done
