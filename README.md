@@ -36,7 +36,7 @@ It uses:
 You can build the Docker image locally using:
 
 ```bash
-docker build -t server-app-replica .
+docker build -f builds/Dockerfile.build -t server-app-replica .
 ```
 
 > You can also push this to a registry like DockerHub or GitLab Container Registry if you want to use it in Portainer or other servers.
