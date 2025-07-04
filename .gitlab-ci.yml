@@ -21,8 +21,8 @@ build-job:
     - docker-compose -f docker-compose.build.yml build
 
     # Tag images
-    - docker tag simple-php-games "$IMAGE_VERSION"
-    - docker tag simple-php-games "$IMAGE_LATEST"
+    - docker tag server-app-replica "$IMAGE_VERSION"
+    - docker tag server-app-replica "$IMAGE_LATEST"
 
     # Push images
     - docker push "$IMAGE_VERSION"
