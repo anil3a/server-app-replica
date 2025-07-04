@@ -1,12 +1,12 @@
-<VirtualHost *:{{PORT}}>
-    ServerName {{DOMAIN}}
-    DocumentRoot /var/www/html/{{FOLDER}}
+<VirtualHost *:${PORT}>
+    ServerName ${DOMAIN}
+    DocumentRoot /var/www/html/${FOLDER}
 
-    <Directory /var/www/html/{{FOLDER}}>
+    <Directory /var/www/html/${FOLDER}>
         AllowOverride All
         Require all granted
     </Directory>
 
-    ErrorLog ${APACHE_LOG_DIR}/error.log
-    CustomLog ${APACHE_LOG_DIR}/access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/${FOLDER}-error.log
+    CustomLog ${APACHE_LOG_DIR}/${FOLDER}-access.log combined
 </VirtualHost>
