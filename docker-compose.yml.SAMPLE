@@ -11,12 +11,12 @@ services:
       - "traefik.http.routers.site1.rule=Host(`site1.yourdomain.com`)"
       - "traefik.http.routers.site1.entrypoints=web"
       - "traefik.http.routers.site1.service=site1"
-      - "traefik.http.services.site1.loadbalancer.server.port=8081"
+      - "traefik.http.services.site1.loadbalancer.server.port=8001"
 
       - "traefik.http.routers.site2.rule=Host(`site2.yourdomain.com`)"
       - "traefik.http.routers.site2.entrypoints=web"
       - "traefik.http.routers.site2.service=site2"
-      - "traefik.http.services.site2.loadbalancer.server.port=8082"
+      - "traefik.http.services.site2.loadbalancer.server.port=8002"
     networks:
       - traefik
 

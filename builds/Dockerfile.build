@@ -31,4 +31,6 @@ RUN chmod +x /var/www/html/n8n-logger/apache_log_watcher.py
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+WORKDIR /var/www/html
+
 ENTRYPOINT ["/entrypoint.sh"]
