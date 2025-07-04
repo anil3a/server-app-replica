@@ -18,7 +18,7 @@ for site in $SITES; do
   export PORT
 
   # Generate vhost file
-  envsubst < /templates/vhost-site.conf.template > "/etc/apache2/sites-available/$FOLDER.conf"
+  envsubst < /templates/vhost-site.conf.template > "/etc/apache2/sites-available/$DOMAIN.conf"
 
   DOC_ROOT="/var/www/html/$FOLDER"
   if [ ! -d "$DOC_ROOT" ]; then
@@ -28,7 +28,7 @@ for site in $SITES; do
   fi
 
   # Enable site
-  a2ensite "$FOLDER.conf"
+  a2ensite "$DOMAIN.conf"
 done
 
 # Disable default
