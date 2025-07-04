@@ -2,7 +2,7 @@ services:
   server-app-replica:
     build:
       context: .
-      dockerfile: Dockerfile.build
+      dockerfile: builds/Dockerfile.build
     container_name: server-app-replica
     image: server-app-replica
     volumes:
