@@ -31,6 +31,14 @@ for site in $SITES; do
   a2ensite "$DOMAIN.conf"
 done
 
+# Add template to html folder too
+mkdir -p "/var/www/html/n8n-logger"
+if [ ! -f "/var/www/html/n8n-logger/apache_log_watcher.py" ]; then
+  echo "Creating missing python script file: /var/www/html/n8n-logger/apache_log_watcher.py"
+  cp "/templates/apache_log_watcher.py.template" "/var/www/html/n8n-logger/apache_log_watcher.py"
+  chmod +x "/var/www/html/n8n-logger/apache_log_watcher.py"
+fi
+
 # Disable default
 a2dissite 000-default.conf
 

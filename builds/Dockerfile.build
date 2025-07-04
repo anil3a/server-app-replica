@@ -25,8 +25,7 @@ RUN apt update && apt install -y \
 RUN a2enmod rewrite
 
 COPY builds/vhost-site.conf.template /templates/vhost-site.conf.template
-COPY html/n8n-logger/apache_log_watcher.py.template /template/apache_log_watcher.py
-RUN chmod +x /template/apache_log_watcher.py
+COPY html/n8n-logger/apache_log_watcher.py.template /templates/apache_log_watcher.py.template
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
