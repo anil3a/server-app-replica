@@ -1,8 +1,8 @@
-<VirtualHost *:8001>
-    ServerName site2.local
-    DocumentRoot /var/www/html/site2
+<VirtualHost *:{{PORT}}>
+    ServerName {{DOMAIN}}
+    DocumentRoot /var/www/html/{{FOLDER}}
 
-    <Directory /var/www/html/site2>
+    <Directory /var/www/html/{{FOLDER}}>
         AllowOverride All
         Require all granted
     </Directory>

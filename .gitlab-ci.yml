@@ -1,0 +1,32 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: overlay2
+  COMPOSE_PROJECT_NAME: server-app-replica
+  IMAGE_VERSION: "$CI_REGISTRY_IMAGE:v1.0.0"
+  IMAGE_LATEST: "$CI_REGISTRY_IMAGE:latest"
+
+stages:
+  - build
+
+build-job:
+  stage: build
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+
+    # Build using docker-compose
+    - docker-compose -f docker-compose.build.yml build
+
+    # Tag images
+    - docker tag simple-php-games "$IMAGE_VERSION"
+    - docker tag simple-php-games "$IMAGE_LATEST"
+
+    # Push images
+    - docker push "$IMAGE_VERSION"
+    - docker push "$IMAGE_LATEST"
+
+    # Cleanup
+    - docker-compose -f docker-compose.build.yml down --volumes

@@ -3,7 +3,7 @@ html/site1/*
 html/site2/*
 !html/site2/.gitkeep
 
-apache_log_watcher.py
+html/n8n-logger/apache_log_watcher.py
 docker-compose.yml
 Dockerfile
 sites-cron

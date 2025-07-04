@@ -1,0 +1,9 @@
+services:
+  server-app-replica:
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    container_name: server-app-replica
+    image: server-app-replica
+    volumes:
+      - ./html:/var/www/html
