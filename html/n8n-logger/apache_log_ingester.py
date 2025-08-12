@@ -46,7 +46,11 @@ class LogWatcher:
         self.config = {}
         self.last_config_load_time = 0
         self.load_config()
-        self.error_start_pattern = re.compile(r'(PHP (Fatal error|Warning|Notice)|\[error\])', re.IGNORECASE)
+        # Updated regex to catch all PHP error types and MySQL errors
+        self.error_start_pattern = re.compile(
+            r'(PHP (Fatal error|Warning|Notice|Parse error|Deprecated)|MySQL Error|\[error\])',
+            re.IGNORECASE
+        )
 
         self.vhost_cache = {}  # Forever cache
         self.git_root_cache = TTLCache(maxsize=1000, ttl=86400)
@@ -205,18 +209,27 @@ class LogWatcher:
         Returns:
             dict | None: Structured metadata dictionary or None if file not found.
         """
-        match = re.search(r'in (.+?) on line (\d+)', error_line)
-        if not match:
-            return None
 
-        file_path, line_number = match.groups()
+        # Extract file path and line number, handling eval() and standard cases
+        match = re.search(r'in ([^\s]+?)(?:\((\d+)\) : eval\(\)\'d code)? on line (\d+)', error_line)
+        if not match:
+            return {
+                "file": None,
+                "line": None,
+                "vhost": None,
+                "git_remote": None,
+                "stack_trace": "Stack trace:" in error_line,
+                "blame": None
+            }
+
+        file_path, eval_line, line_number = match.groups()
         file_path = file_path.strip()
         line_number = int(line_number)
-        dir_path = os.path.abspath(os.path.dirname(file_path))
+        dir_path = os.path.abspath(os.path.dirname(file_path)) if file_path != 'eval()' else None
 
-        vhost = self.find_vhost_for_path(file_path)
+        vhost = self.find_vhost_for_path(file_path) if file_path != 'eval()' else None
 
-        if dir_path in self.git_root_cache:
+        if dir_path and dir_path in self.git_root_cache:
             repo_root = self.git_root_cache[dir_path]
         else:
             try:
@@ -224,28 +237,25 @@ class LogWatcher:
                     ["git", "rev-parse", "--show-toplevel"],
                     cwd=dir_path,
                     text=True
-                ).strip()
+                ).strip() if dir_path else None
             except subprocess.CalledProcessError:
                 repo_root = None
-            self.git_root_cache[dir_path] = repo_root
+            if dir_path:
+                self.git_root_cache[dir_path] = repo_root
 
-        if dir_path in self.git_remote_cache:
+        if dir_path and dir_path in self.git_remote_cache:
             git_remote = self.git_remote_cache[dir_path]
         else:
             git_remote = subprocess.getoutput(
                 f"cd '{dir_path}' && git config --get remote.origin.url || echo 'unknown'"
-            ).strip()
-            self.git_remote_cache[dir_path] = git_remote
+            ).strip() if dir_path else 'unknown'
+            if dir_path:
+                self.git_remote_cache[dir_path] = git_remote
 
-        blame_key = f"{file_path}:{line_number}"
+        blame_key = f"{file_path}:{line_number}" if file_path != 'eval()' else None
 
-        blame = self.get_git_blame(file_path, line_number, repo_root)
-        self.git_blame_cache[blame_key] = blame
-
-        if blame_key in self.git_blame_cache:
-            blame = self.git_blame_cache[blame_key]
-        else:
-            blame = self.get_git_blame(file_path, line_number, repo_root)
+        blame = self.get_git_blame(file_path, line_number, repo_root) if blame_key else None
+        if blame_key:
             self.git_blame_cache[blame_key] = blame
 
         return {
@@ -253,7 +263,7 @@ class LogWatcher:
             "line": line_number,
             "vhost": vhost.strip() if vhost else None,
             "git_remote": git_remote,
-            "error_line": error_line.strip(),
+            "stack_trace": "Stack trace:" in error_line,
             "blame": blame
         }
 
@@ -269,7 +279,7 @@ class LogWatcher:
         Returns:
             dict | None: Author, email, summary, commit hash and local_changes or None if unavailable. Summary can have local changes details
         """
-        if not repo_path:
+        if not repo_path or file_path == 'eval()':
             return None
 
         try:
@@ -299,7 +309,6 @@ class LogWatcher:
                     blame["summary"] = line[8:]
                 elif re.match(r"^[a-f0-9]{40}", line):
                     blame["commit"] = line.split()[0][:8]
-
 
             if blame["is_local_changes"]:
                 # Read git diff only for that file
@@ -332,7 +341,6 @@ class LogWatcher:
                 blame["summary"] = f"[Uncommitted changes] Last modified: {last_modified}"
                 if line_diff:
                     blame["summary"] += f" | Diff line: {line_diff.strip()}"
-
 
             return blame
 
