@@ -9,8 +9,9 @@ from cachetools import TTLCache
 
 class LogWatcher:
     """
-    LogWatcher is a long-running Python service designed to monitor Apache log files for PHP errors
-    and forward enriched error details (including Git blame, vhost, and file location) to an n8n webhook.
+    LogWatcher is a long-running Python service to monitor Apache error logs for PHP errors
+    (Fatal error, Warning, Notice, Parse error, etc.) and forward enriched error details
+    (including Git blame, vhost, and file location) to an n8n webhook.
 
     Key Features:
     - Tails Apache error logs in real-time.
@@ -21,9 +22,9 @@ class LogWatcher:
 
     Caches:
     - vhost_cache (dict): Forever cached since vhost config rarely changes.
-    - git_remote_cache (TTL): Cached per directory.
-    - git_root_cache (TTL): Cached per directory.
-    - git_blame_cache (TTL): Cached per file and line number.
+    - git_root_cache (TTLCache): Cached per directory, TTL 1 hour.
+    - git_remote_cache (TTLCache): Cached per directory, TTL 1 hour.
+    - git_blame_cache (TTLCache): Cached per file and line, TTL 1 hour.
 
     Usage:
         watcher = LogWatcher(config_path='config.json', reload_interval=10)
@@ -32,11 +33,11 @@ class LogWatcher:
 
     def __init__(self, config_path='config.json', reload_interval=10):
         """
-        Initializes the LogWatcher class with config and internal caches.
+        Initializes LogWatcher with config and caches.
 
         Args:
-            config_path (str): Path to JSON config file
-            reload_interval (int): Time in seconds to reload config from disk
+            config_path (str): Path to JSON config file.
+            reload_interval (int): Seconds between config reloads.
 
         Raises:
             Exception if config loading fails (logged, but not thrown)
@@ -102,13 +103,13 @@ class LogWatcher:
         try:
             error_detail = self.get_project_info(error_trace)
             print(f"[SEND] Sending error trace to n8n:")
-            self.session.post(n8n_url, json={"error_line": error_trace, "error_detail": error_detail}, timeout=2)
+            self.session.post(n8n_url, json={"error": error_trace, "error_detail": error_detail}, timeout=2)
         except Exception as e:
             print(f"[ERROR] Failed to send to n8n: \n{e}")
 
     def tail_log(self):
         """
-        Generator that tails a log file and yields grouped error traces.
+        Generator that tails the Apache error log and yields grouped PHP error traces.
 
         Yields:
             str: Multi-line error trace strings.
@@ -155,7 +156,7 @@ class LogWatcher:
 
     def run(self):
         """
-        Starts the log watcher loop and sends matching traces to n8n.
+        Starts the log watcher loop, monitoring Apache error logs and sending PHP errors to n8n.
         """
         print("[INFO] LogWatcher started with error trace grouping.")
         for error_trace in self.tail_log():
@@ -177,7 +178,7 @@ class LogWatcher:
             vhost_dir (str): Apache vhost directory to search.
 
         Returns:
-            str | None: Filename of the matching vhost, or None if not found.
+            str | None: Path to matching vhost file, or None if not found.
         """
         if file_path in self.vhost_cache:
             return self.vhost_cache[file_path]
@@ -201,13 +202,13 @@ class LogWatcher:
 
     def get_project_info(self, error_line):
         """
-        Extracts file, line number, vhost, git blame, and repo info for an error.
+        Extracts file, line number, vhost, git blame, and repo info for a PHP error.
 
         Args:
             error_line (str): Line or trace containing file path and line number.
 
         Returns:
-            dict | None: Structured metadata dictionary or None if file not found.
+            dict: Structured metadata dictionary
         """
 
         # Extract file path and line number, handling eval() and standard cases
@@ -272,9 +273,9 @@ class LogWatcher:
         Runs `git blame` on a specific line to get commit and author info.
 
         Args:
-            file_path (str): Full path to the file
-            line_number (int): Line number for blame
-            repo_path (str | None): Git root directory
+            file_path (str): Full path to the file.
+            line_number (int): Line number for blame.
+            repo_path (str | None): Git repository root directory.
 
         Returns:
             dict | None: Author, email, summary, commit hash and local_changes or None if unavailable. Summary can have local changes details
